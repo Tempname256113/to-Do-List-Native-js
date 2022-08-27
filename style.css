@@ -22,8 +22,8 @@ html {
     background-color: #FEF6F4;
 }
 
-header p {
-    margin: 24px 0px 16px 16px;
+.style {
+    padding: 24px 0px 16px 16px;
     font-size: 28px;
 }
 
@@ -81,10 +81,16 @@ header p {
     padding: 16px;
     word-break: break-all;
     display: flex;
+    position: relative;
 }
 
 .added-list__red-counter {
     padding-left: 8px;
+}
+
+.added-list__red-clean {
+    position: absolute;
+    right: 10px;
 }
 
 .added-list-red {
@@ -191,4 +197,68 @@ header p {
     display: flex;
     align-items: center;
     border-radius: 8px;
+}
+
+.popup {
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    background-color: rgba(143, 143, 143, 0.5);
+    z-index: 999;
+    padding: 170px 74px 250px 42px;
+    font-size: 17px;
+    display: none;
+}
+
+.popup__content {
+    padding: 16px;
+    width: 260px;
+    background-color: white;
+    border-radius: 16px;
+}
+
+.popup__buttons-container {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.popup__btn {
+    width: 115px;
+    height: 42px;
+    border-radius: 8px;
+    background: #FF8181;
+    border: transparent;
+    color: white;
+    font-size: 18px;
+}
+
+.green {
+    background-color: #80C890;
+}
+
+.popup__div {
+    height: 19px;
+    width: 19px;
+    border: 0.3px solid rgba(0, 0, 0, 0.4);
+    border-radius: 10px;
+}
+
+.popup__div-active {
+    height: 19px;
+    width: 19px;
+    border: 0.3px solid rgba(0, 0, 0, 0.4);
+    border-radius: 10px;
+    background: url(./img/checkbox-checked.png) no-repeat black;
+    background-position: 50% 50%;
+}
+
+.popup__label {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.popup__label input {
+    display: none;
 }

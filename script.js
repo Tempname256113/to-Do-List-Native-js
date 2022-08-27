@@ -1,87 +1,125 @@
 
-
+// при загрузке страницы проверяет хранилище. если ничего нет, то работает по дефолту. если есть, то меняет объект 
+window.addEventListener('load', function(){
+    if (localStorage.getItem('toDo') === null) {
+        return
+    } else {
+        toDoLists = JSON.parse(localStorage.getItem('toDo'));
+        calculateDataNum();
+        render();
+    }
+})
 
 // переменные
 const newListInput = document.querySelector('.new-list__input');
 const newListDiv = document.querySelector('.new-list__div');
 const elementMain = document.querySelector('main');
-const footer = document.querySelector('footer');
-
-// переменные для инпута подзадачи пользователя subTask. содержимое инпута для преобразования в чекбокс и счетчик для разных id
-
-let subTaskValue;
-let subTaskId = -1;
+let added = false;
 
 
-// массив для added-list__container (контейнера с названием, счетчиком главного таска и + list item) и массив для блоков + List item
-const divTitleArray = [];
-const listItemArray = [];
+// надо придумать метод. когда удаляешь лист, то все листы получают новый дата атрибут. с нулевого и по нарастающей
 
-
-let generalTaskCounter = -1;
-
-// не завершенные инпуты пользователя. не написал и перезагрузил - значит не нужно было, удаляем
-
-const inputNotCompleted = document.querySelectorAll('#notCompleted');
-const inputNotCompletedArr = [];
-
-
-// тут псевдомассивы. при загрузке страницы смотрит есть что нибудь или нет
-const divTitleArray1 = document.querySelectorAll('.added-list__red');
-const listItemArray1 = document.querySelectorAll('.added-list__list-item-div');
-// внести все существующие элементы для переключения в массив
-for (let i = 0; i < divTitleArray1.length; i++) {
-    divTitleArray.push(document.querySelector(`#generalTaskTitle${i}`));
-    listItemArray.push(document.querySelector(`#list-item${i}`));
-}
-
-// массив для added-list__container, added-list__list-item-div, added-list__checkbox-div-input и др.
-const listItemArr = []; // added-list__list-item-div
-const listContainerArray = []; // added-list__container
-const checkboxInputArray = []; // added-list__checkbox-div-input
-
-// чекбоксы
-const checkboxArr = document.querySelectorAll('.added-list__checkbox-div-input'); // все чекбоксы на странице
-const checkboxDiv = []; // все флажки чекбоксов
-const checkboxText = []; // все текстовые значения чекбоксов
-
-
-// применяется чтобы перезаписывать дата атрибут собой. используется в функции со слушателем на окне, надеюсь дальше вспомнишь 
-// как шла мысля. я объяснить тут наврядли смогу, читай что написал. извини что код такой отвратительный, я старался :с
-let count;
+// чекбосы нужно сделать так checkbox: [[checkboxTitle, checkBoxId, checkbox-checked?][checkboxTitle2, checkboxId2, checkbox-checked?]]
 
 
 
-// массив для текста в блоке + List item 
-
-const listItemParray = [];
-
-// массивы которые собирают создаваемые элементы. нужны мне для работы с localStorage (дальше будет понятно зачем)
-
-const listItemStorageArray = [];
-const addedListContainerArray = [];
-
-listItemStorageArray.push(document.querySelectorAll('.added-list__list-item-div'));
-addedListContainerArray.push(document.querySelectorAll('.added-list__container'));
-
-
-const toDoLists = {
+let toDoLists = {
+    dataNum: 0,
     lists: [
-        {
-        //     listName: 'name',
-        //     listId: 0,
-        //     listDataNum: 0,
+        // {
+        //     listTitle: 'MyFirstTitle',
         //     listCounter: 0,
-            // actions: [],
-            // actionsId: [],
-        }
+        //     listDataNum: 0,
+        //     checkbox: [
+        //         {
+        //             checkboxTitle: 'test1',
+        //             checkboxId: 'a0',
+        //             checkboxState: false,
+        //         },
+        //         {
+        //             checkboxTitle: 'test2',
+        //             checkboxId: 'a1',
+        //             checkboxState: false,
+        //         },
+        //         {
+        //             checkboxTitle: 'test3',
+        //             checkboxId: 'a2',
+        //             checkboxState: false,
+        //         },
+        //         {
+        //             checkboxTitle: 'test4',
+        //             checkboxId: 'a3',
+        //             checkboxState: false,
+        //         },
+        //         {
+        //             checkboxTitle: 'test5',
+        //             checkboxId: 'a4',
+        //             checkboxState: false,
+        //         },
+        //     ],
+        // },
+        // {
+        //     listTitle: 'MySecondTitle',
+        //     listCounter: 0,
+        //     listDataNum: 1,
+        //     checkbox: [
+        //         {
+        //             checkboxTitle: 'secTest1',
+        //             checkboxId: 'b5',
+        //             checkboxState: false,
+        //         },
+        //         {
+        //             checkboxTitle: 'secTest2',
+        //             checkboxId: 'b6',
+        //             checkboxState: false,
+        //         },
+        //         {
+        //             checkboxTitle: 'secTest3',
+        //             checkboxId: 'b7',
+        //             checkboxState: false,
+        //         },
+        //         {
+        //             checkboxTitle: 'secTest4',
+        //             checkboxId: 'b8',
+        //             checkboxState: false,
+        //         },
+        //         {
+        //             checkboxTitle: 'secTest5',
+        //             checkboxId: 'b9',
+        //             checkboxState: false,
+        //         },
+        //     ],
+        // }
     ]
 }
 
 
+// метод расчета нового числа для data атрибута
+// закинул этот алгоритм для рассчета на объект из хранилища. тут нужен другой алгоритм
+function calculateDataNum(){
+    let max;
+    for (let key in toDoLists.lists) {
+        max = Number(key);
+    }
+    toDoLists.dataNum = max;
+}
 
-// поменял событие keydown на input. теперь работает корректнее
-function addNewList () {
+// метод расчета нового числа для data атрибута v2 (для добавления новых листов)
+function calculateDataNum2(){
+    let max;
+    for (let key in toDoLists.lists) {
+        max = Number(key) + 1;
+    }
+    if (max === undefined) {
+        max = 0;
+    }
+    if (max < 0) {
+        max = 0;
+    }
+    toDoLists.dataNum = max;
+}
+
+function addNewList(){
     newListInput.addEventListener('focus', function () {
         this.style.outline = 'none';
     })
@@ -94,321 +132,335 @@ function addNewList () {
     newListDiv.addEventListener('click', function () {
         if (newListDiv.classList.contains('new-list__div-active')) {
             // тут должны быть блоки которые добавляются при нажатии по активированному new list
-            addedList(footer);
+            // рассчитывает новый data number для листа
+            calculateDataNum2();
+            // пушит новый лист в массив для листов
+            toDoLists.lists.push({
+                listTitle: newListInput.value,
+                listCounter: 0,
+                listDataNum: toDoLists.dataNum,
+                checkbox: [],
+            })
+            createdNewList();
+            render();
         }
     })
 }
 
 addNewList();
 
-// создание общего дива с задачами юзера. added-list 
-function addedList (connection) {
+function render(){
+    elementMain.innerHTML = '';
+    const list = toDoLists.lists;
+    for (let key in list) {
+        const generalContainer = createdNewList(list[key].listDataNum);
+        const newList = createNewListContainer(list[key].listTitle, list[key].listCounter, list[key].listDataNum);
+        generalContainer.appendChild(newList);
+        for (let i = 0; i < list[key].checkbox.length; i++) {
+            const newSubTask = checkbox(list[key].checkbox[i].checkboxTitle, list[key].checkbox[i].checkboxId, list[key].checkbox[i].checkboxState);
+            newList.after(newSubTask);
+        }
+    }
+}
+
+
+// новый список для задач
+function createdNewList(dataNum){
     const div = document.createElement('div');
     div.classList.add('added-list');
-    connection.appendChild(div);
-    generalTask(div);
+    // div.appendChild(createNewListContainer());
+    // div.appendChild(inputSubTask());
+    // div.appendChild(checkbox());
+    div.setAttribute('data-num', `${dataNum}`);
+    elementMain.prepend(div);
+    return div;
 }
 
-// название общей задачи и счетчик подзадач, добавление подзадачи + List item
-function generalTask (connection) {
-    let check = true;
-    let countTask = 0;
-    let title = newListInput.value;
-    const div = document.createElement('div');
-    // divTitle это элемент <p> который содержит название и счетчик общего таска. он помещается в контейнер
-    const divTitle = document.createElement('p');
-    generalTaskCounter++;
-    // div3 - контейнер в который вложены два элемента <p> название задачи и счетчик
-    const div3 = document.createElement('div');
-    div3.classList.add('added-list__red');
-    const taskCounter = document.createElement('p');
-    taskCounter.classList.add('added-list__red-counter');
-    taskCounter.setAttribute('data-num', generalTaskCounter); 
-    taskCounter.setAttribute('id', `taskCounter${generalTaskCounter}`);
-    taskCounter.textContent = countTask;
-    divTitle.classList.add('added-list__red-text');
-    div.classList.add('added-list__container');
-    div.setAttribute('data-num', generalTaskCounter);
-    div.setAttribute('id', `list${generalTaskCounter}`);
-    div3.setAttribute('data-num', generalTaskCounter);
-    div3.setAttribute('id', `generalTaskTitle${generalTaskCounter}`);
-    divTitle.textContent = `${title}`;
-    div3.appendChild(divTitle);
-    div3.appendChild(taskCounter);
-    divTitleArray.push(div3);
-    // div2 это блок с элементом <p> при нажатии по которому добавляется новая подзадача в общий таск. + List item
-    const div2 = document.createElement('div');
-    const listItemP = document.createElement('p');
-    div2.classList.add('added-list__list-item-div');
-    div2.setAttribute('data-num', generalTaskCounter);
-    // listItemP.classList.add('added-list__list-item-p');
-    div2.textContent = '+ List item';
-    listItemP.setAttribute('data-num', generalTaskCounter);
-    div2.setAttribute('id', `list-item${generalTaskCounter}`); // div2 это блок + List item
-    // div2.appendChild(listItemP);
-    listItemArray.push(div2);
-    div2.style.display = 'none';
+// контейнер с названием и кнопкой добавления подзадачи
+function createNewListContainer(listTitle, listCounter, dataNum){
+    // контейнер где содержится див с названием листа и блоком для добавления подзадач
+    const generalDiv = document.createElement('div');
+    generalDiv.classList.add('added-list__container');
 
-    // записывает данные в объект 
-    toDoLists.lists[generalTaskCounter] = {
-        listContainerId: `list${generalTaskCounter}`, // id блока нового листа (в котором название листа и + List item)
-        listContainerDataNum: generalTaskCounter, // data-num блока нового листа (в котором название листа и + List item)
-        listName: title, // название нового листа
-        listId: `generalTaskTitle${generalTaskCounter}`, // id дива с названием и счетчиком нового листа
-        listDataNum: generalTaskCounter, // data-num дива с названием и счетчиком нового листа
-        listCounter: countTask, // счетчик около названия нового листа. бесполезно, когда страница закрывается надо записать число сюда!!!
-        addListItemPDataNum: generalTaskCounter, // data-num текста в блоке + List item
-        addListItemId: `list-item${generalTaskCounter}`, // id блока + List item
-        addListDataNum: generalTaskCounter, // data-num блока + List item
+    // название и счетчик листа, кнопка Clean
+    const titleDiv = document.createElement('div');
+    const title = document.createElement('p');
+    const counter = document.createElement('p');
+    const clean = document.createElement('p');
+    clean.textContent = 'Clean';
+    titleDiv.setAttribute('data-num', `${dataNum}`);
+    title.textContent = listTitle;
+    counter.textContent = listCounter;
+    title.classList.add('added-list__red-text');
+    counter.classList.add('added-list__red-counter');
+    clean.classList.add('added-list__red-clean');
+    titleDiv.classList.add('added-list__red');
+    titleDiv.appendChild(title);
+    titleDiv.appendChild(counter);
+    titleDiv.appendChild(clean);
+    clean.style.display = 'none';
 
-         // cоздание массивов для чекбоксов
-        actions: [], // названия чекбоксов листа
-        actionsId: [], // id чекбоксов листа
-    }
+    // кнопка для добавления подзадач
+    const addListItemDiv = document.createElement('div');
+    addListItemDiv.setAttribute('data-num', `${dataNum}`);
+    addListItemDiv.classList.add('added-list__list-item-div');
+    addListItemDiv.textContent = '+ List item';
+    addListItemDiv.style.display = 'none';
 
-    // при клике по + List item происходят ниже описанные действия
-    div2.addEventListener('click', function () {
-        if (check) {
-            countTask++;
-            taskCounter.textContent = countTask;
-            check = false;
-    // инпут подзадачи пользователя
-    function subTask (connection) {
-        subTaskId++;
+    generalDiv.appendChild(titleDiv);
+    generalDiv.appendChild(addListItemDiv);
+    return generalDiv;
+}
+
+// ипнут для ввода подзадачи юзера
+function inputSubTask(){
     const div = document.createElement('div');
     div.classList.add('added-list__user-task');
+
     const input = document.createElement('input');
     input.classList.add('added-list__user-task__input');
+    div.appendChild(input);
+
     const vector = document.createElement('div');
     vector.classList.add('added-list__user-task__vector-img');
-    div.setAttribute('id', 'notCompleted');
-    input.addEventListener('input', function () {
-        vector.classList.add('added-list__user-task__vector-img-active');
-        if (input.value === '') {
+    div.appendChild(vector);
+
+    return div;
+}
+
+// готовый чекбокс из инпута подзадачи
+function checkbox(title, id, state){
+    const div = document.createElement('div');
+    div.classList.add('added-list__checkbox-div');
+
+    const input = document.createElement('input');
+    input.setAttribute('type', 'checkbox');
+    input.setAttribute('id', id);
+    input.classList.add('added-list__checkbox-div-input');
+    input.checked = state;
+    div.appendChild(input);
+
+    const label = document.createElement('label');
+    label.setAttribute('for', id);
+    label.classList.add('added-list__checkbox-div-label');
+
+    const labelDiv = document.createElement('div');
+    const inputValue = document.createElement('p');
+    labelDiv.classList.add('checkbox-label');
+    inputValue.classList.add('checkbox-text');
+    inputValue.textContent = title;
+    label.appendChild(labelDiv);
+    label.appendChild(inputValue);
+
+    div.appendChild(label);
+
+    // если состояние чекбокса checked, то условие срабатывает и меняет стили
+    if (input.checked) {
+        labelDiv.classList.remove('checkbox-label');
+        labelDiv.classList.add('checkbox-label-active');
+        inputValue.classList.add('added-list__checkbox-div-label-active');
+    }
+
+    return div;
+}
+
+// инпут для чекбокса
+function inputNewTask(connect){
+    let uniqueId = Date.now();
+    const div = document.createElement('div');
+    div.classList.add('added-list__user-task');
+
+    const input = document.createElement('input');
+    input.classList.add('added-list__user-task__input');
+
+    const vector = document.createElement('div');
+    vector.classList.add('added-list__user-task__vector-img');
+
+    function inp(){
+        if(input.value !== '') {
+            vector.classList.remove('added-list__user-task__vector-img');
+            vector.classList.add('added-list__user-task__vector-img-active');
+        } else {
             vector.classList.remove('added-list__user-task__vector-img-active');
-        } 
-        if (input.value.length === 26) {
+            vector.classList.add('added-list__user-task__vector-img');
+        }
+        if (input.value.length === 30) {
             input.value = input.value.slice(0, -1);
         }
-    })
-    vector.addEventListener('click', function () {
+    }
+    input.addEventListener('input', inp);
+
+    function vec(){
         if (vector.classList.contains('added-list__user-task__vector-img-active')) {
-            div.removeAttribute('id', 'notCompleted');
-            subTaskValue = input.value;
+            // добавляет новый чекбокс в объект 
+            toDoLists.lists[Number(vector.parentElement.parentElement.dataset.num)].listCounter += 1;
+            toDoLists.lists[Number(vector.parentElement.parentElement.dataset.num)].checkbox.push({
+                checkboxTitle: input.value,
+                checkboxId: uniqueId,
+                checkboxState: false,
+            });
+            added = false;
+
+            div.parentNode.replaceChild(checkbox(input.value, uniqueId), div);
             
-            
-            
-            input.remove();
-            vector.remove();
-            check = true;
-            subTaskLabel(div);
+            vector.removeEventListener('click', vec);
+            input.removeEventListener('input', inp);
+            render();
         }
-    })
+    }
+    vector.addEventListener('click', vec);
+
     div.appendChild(input);
     div.appendChild(vector);
-    connection.after(div);
+    connect.after(div);
+    return div;
 }
 
-    // постарался отделить отдельный блок кода чтобы было более читабельно. изначально все функции были отделены друг от друга, но
-    // но в ходе модифицирования и исправления багов мне пришлось перестроить архитектуру проекта. выглядит отвратительно, но работает
-    // надеюсь в этот код никто не полезет, я сам его боюсь
-    // вызов функции подзадачи пользователя
-    subTask(div);
-
-        } 
-    })
-    // при клике по generalTask окрашивает блок в красный цвет и меняет цвет текста на белый
-    div.addEventListener('click', function () {
-        div3.classList.add('added-list-red');
-        div2.style.display = 'block';
-    })
-    div.appendChild(div3);
-    div.appendChild(div2);
-    connection.appendChild(div);
-}
-
-// label для чекбокса подзадачи который создается из инпута
-function subTaskLabel (connection) {
-    const label = document.createElement('label');
-    label.classList.add('added-list__checkbox-div-label');
-    label.setAttribute('for', 'checkbox' + subTaskId);
-    const div = document.createElement('div');
-    div.classList.add('checkbox-label');
-    const p = document.createElement('p');
-    const input = document.createElement('input');
-    input.classList.add('added-list__checkbox-div-input');
-    input.setAttribute('id', 'checkbox' + subTaskId);
-    input.setAttribute('type', 'checkbox');
-    p.classList.add('checkbox-text');
-    p.textContent = subTaskValue;
-    
-
-    
-
-    input.addEventListener('click', function () {
-        if (input.checked) {
-            input.setAttribute('checked', true);
-            div.classList.add('checkbox-label-active');
-            p.classList.add('added-list__checkbox-div-label-active');
-        } else {
-            input.removeAttribute('checked', true);
-            div.classList.remove('checkbox-label-active');
-            p.classList.remove('added-list__checkbox-div-label-active');
-        }
-    })
-    label.appendChild(div);
-    label.appendChild(p);
-    connection.appendChild(input);
-    connection.appendChild(label);
-}
-
-
-
-// слушатель нажатий прикрепленный за окном, который активирует общие таски
-window.addEventListener('click', function (event) {
-    if (event.target.classList.contains('added-list__red')) {
-        count = event.target.dataset.num;
-        for (let i = 0; i < divTitleArray.length; i++) {
-            divTitleArray[i].classList.remove('added-list-red');
-            listItemArray[i].style.display = 'none';
-        }
-        divTitleArray[count].classList.add('added-list-red');
-        listItemArray[count].style.display = 'block';
-    }
-})
-
-window.addEventListener('change', function () {
-    console.log(toDoLists)
-    // псевдомассив текста в блоке + List item
-    const psevdoListItem = document.querySelectorAll('.added-list__list-item-p');
-    for (let i = 0; i < psevdoListItem.length; i++) {
-        listItemParray[i] = psevdoListItem[i];
-        listItemParray[i].removeEventListener('click', function () {
-            
-            // запись данных в объект
-            toDoLists.lists[listItemParray[i].dataset.num].actionsId.push(`checkbox${subTaskId}`); // id чекбоксов листа
-
-            // запись данных в объект
-            toDoLists.lists[listItemParray[i].dataset.num].actions.push(subTaskValue); // названия чекбоксов листа
-        })
-        listItemParray[i].addEventListener('click', function () {
-            
-            // запись данных в объект
-            toDoLists.lists[listItemParray[i].dataset.num].actionsId.push(`checkbox${subTaskId}`); // id чекбоксов листа
-
-            // запись данных в объект
-            toDoLists.lists[listItemParray[i].dataset.num].actions.push(subTaskValue); // названия чекбоксов листа
-        })
-    }
-    console.log(listItemParray);
-})
-
-function oneTime () {
-    window.addEventListener('click', function (event) {
-        let num;
-        if (event.target.classList.contains('added-list__list-item-p')) {
-            num = event.target.dataset.num;
-            if (subTaskValue !== undefined) {
-                // запись данных в объект
-                toDoLists.lists[Number(num)].actions.push(subTaskValue); // названия чекбоксов листа
+// движ на странице здесь
+elementMain.addEventListener('click', event => {
+    // это нужно для работы чекбоксов на странице
+    if (event.target.classList.contains('added-list__checkbox-div-input')) {
+        const dataNum = Number(event.target.parentNode.parentNode.dataset.num);
+        for (let i = 0; i < toDoLists.lists.length; i++) {
+            for (let j = 0; j < toDoLists.lists[i].checkbox.length; j++) {
+                if (toDoLists.lists[i].listDataNum == dataNum) {
+                    if (toDoLists.lists[i].checkbox[j].checkboxId == event.target.id) {
+                        toDoLists.lists[i].checkbox[j].checkboxState = !toDoLists.lists[i].checkbox[j].checkboxState;
+                    }
+                }
             }
-
-            
-            // запись данных в объект
-            toDoLists.lists[Number(num)].actionsId.push(`checkbox${subTaskId}`); // id чекбоксов листа
         }
-    })
+        render();
+    }
+    // это нужно чтобы листы становились активными при нажатии на них
+    if (event.target.classList.contains('added-list__red') || event.target.classList.contains('added-list__red-text') || event.target.classList.contains('added-list__red-counter')) {
+        let dataNum = 0;
+        // при клике обнаруживает номер дата атрибута
+        if (event.target.classList.contains('added-list__red-text')) {
+            dataNum = event.target.parentNode.dataset.num;
+        }
+        if (event.target.classList.contains('added-list__red-counter')) {
+            dataNum = event.target.parentNode.dataset.num;
+        }
+        if (event.target.classList.contains('added-list__red')) {
+            dataNum = event.target.dataset.num;
+        }
+        // по дата атрибуту меняет состояние листа
+        for (let item in toDoLists.lists) {
+            elementMain.querySelector(`[data-num="${toDoLists.lists[item].listDataNum}"]`).querySelector('.added-list__red').classList.remove('added-list-red');
+            elementMain.querySelector(`[data-num="${toDoLists.lists[item].listDataNum}"]`).querySelector('.added-list__list-item-div').style.display = 'none';
+            elementMain.querySelector(`[data-num="${toDoLists.lists[item].listDataNum}"]`).querySelector('.added-list__red-clean').style.display = 'none';
+        }
+        elementMain.querySelector(`[data-num='${dataNum}']`).querySelector('.added-list__red').classList.add('added-list-red');
+        elementMain.querySelector(`[data-num='${dataNum}']`).querySelector('.added-list__list-item-div').style.display = 'block';
+        elementMain.querySelector(`[data-num="${dataNum}"]`).querySelector('.added-list__red-clean').style.display = 'block';
+    }
+    // при нажатии по + List item добавляет инпут для нового таска
+    if (event.target.classList.contains('added-list__list-item-div')) {
+        let dataNum = 0;
+        dataNum = event.target.dataset.num;
+        if (added === false) {
+            inputNewTask(elementMain.querySelector(`[data-num='${dataNum}']`).querySelector('.added-list__container'));
+            added = true;
+        }
+    }
+    // появление модального окна
+    if (event.target.classList.contains('added-list__red-clean')) {
+        // передает название листа по которому кликнул юзер
+        const listTitle = event.target.parentElement.parentElement.parentElement.querySelector('.added-list__red-text').textContent;
+        const currentListData = Number(event.target.parentElement.parentElement.parentElement.dataset.num);
+        popupContent.addEventListener('click', modalWindow(listTitle, currentListData));
+    }
+});
+
+// модальное окно для удаления тасков или листа
+const popupContent = document.querySelector('.popup__content');
+const removeCompletedItemsInput = popupContent.querySelector(`[data-label='items']`);
+const removeListInput = popupContent.querySelector(`[data-label='list']`);
+const popupText = popupContent.querySelector('p');
+
+
+// все операции связанные с модальным окном находятся здесь
+function modalWindow(title, listData){
+    popupContent.parentElement.style.display = 'block';
+    popupText.textContent = `What do you want to do with ${title}?`;
+    // возвращаю функцию чтобы получить параметры при передаче колбеком в слушатель событий
+    return function listener(event){
+        if (event.target.dataset.label === 'items') {
+            if (removeCompletedItemsInput.checked) {
+                event.target.parentElement.querySelector('div').classList.add('popup__div-active');
+            } else {
+                event.target.parentElement.querySelector('div').classList.remove('popup__div-active');
+            }
+        }
+        if (event.target.dataset.label === 'list') {
+            if(removeListInput.checked) {
+                event.target.parentElement.querySelector('div').classList.add('popup__div-active');
+            } else {
+                event.target.parentElement.querySelector('div').classList.remove('popup__div-active');
+            }
+        }
+        // при нажатии по кнопке отмены ничего не происходит. модальное окно закрывается
+        if (event.target.id === 'cancel') {
+            popupContent.parentElement.style.display = 'none';
+            popupContent.removeEventListener('click', listener);
+        }
+        // при нажатии на подтверждение происходит много всего
+        if (event.target.id === 'confirm') {
+            if (removeCompletedItemsInput.checked) {
+                let listCounter = 0;
+                let currentIndex;
+                const checkboxArray = [];
+                for (let i = 0; i < toDoLists.lists.length; i++) {
+                    if (toDoLists.lists[i].listDataNum == listData) {
+                        currentIndex = toDoLists.lists[i].listDataNum;
+                    }
+                }
+                for (let i = 0; i < toDoLists.lists[currentIndex].checkbox.length; i++) {
+                    if (toDoLists.lists[currentIndex].checkbox[i].checkboxState === false) {
+                        checkboxArray.push(toDoLists.lists[currentIndex].checkbox[i]);
+                    }
+                    if (toDoLists.lists[currentIndex].checkbox[i].checkboxState === true) {
+                        listCounter++;
+                    }
+                }
+                toDoLists.lists[currentIndex].checkbox = checkboxArray;
+                for (let i = 0; i < toDoLists.lists.length; i++) {
+                    if (toDoLists.lists[i].listDataNum == listData) {
+                        toDoLists.lists[i].listCounter -= listCounter;
+                    }
+                }
+                render();
+                popupContent.parentElement.style.display = 'none';
+                popupContent.removeEventListener('click', listener);
+            } 
+            if (removeListInput.checked) {
+                for (let i = 0; i < toDoLists.lists.length; i++) {
+                    if (toDoLists.lists[i].listDataNum == listData) {
+                        toDoLists.lists.splice(i, 1);
+                    }
+                }
+                render();
+                popupContent.parentElement.style.display = 'none';
+                popupContent.removeEventListener('click', listener);
+            }
+            if (removeCompletedItemsInput.checked && removeListInput.checked) {
+                for (let i = 0; i < toDoLists.lists.length; i++) {
+                    if (toDoLists.lists[i].listDataNum == listData) {
+                        toDoLists.lists.splice(i, 1);
+                    }
+                }
+                render();
+                popupContent.parentElement.style.display = 'none';
+                popupContent.removeEventListener('click', listener);
+            }
+        }
+    }
 }
 
-// oneTime();
 
-// здесь зона localStorage
-
-// window.addEventListener('unload', function () {
-//     for (let i = 0; i < divTitleArray.length; i++) {
-//         divTitleArray[i].classList.remove('added-list-red');
-//         listItemArray[i].style.display = 'none';
-//     }
-//     for (let i = 0; i < inputNotCompleted.length; i++) {
-//         inputNotCompletedArr.push(document.querySelector('#notCompleted'));
-//         inputNotCompletedArr[i].remove();
-//     }
-//     localStorage.setItem('subTaskId', subTaskId);
-//     localStorage.setItem('generalTaskCounter', generalTaskCounter);
-// })
-
-// если футер содержит элемент не активированного импута, то инпут нужно удалить и сохранить версию верстки без него в localStorage
-
-// window.addEventListener('load', function () {
-//     if (localStorage.getItem('subTaskId') === null || localStorage.getItem('subTaskId') === NaN) {
-//         subTaskId = -1;
-//     } else {
-//         subTaskId = localStorage.getItem('subTaskId');
-//     }
-//     // generalTaskCounter = localStorage.getItem('generalTaskCounter');
-//     // subTaskId = localStorage.getItem('subTaskId');
-
-
-//     for (let i = 0; i < addedListContainerArray[0].length; i++) {
-//         listContainerArray.push(document.querySelector(`#list${i}`));
-//         listItemArr.push(document.querySelector(`#list-item${i}`));
-//     }
-//     for (let i = 0; i < addedListContainerArray[0].length; i++) {
-//         let check = true;
-//         listItemArr[i].addEventListener('click', function () {
-//             if (check) {
-//                 check = false;
-//                 subTaskId++;
-//                 const counter = document.querySelector(`#taskCounter${i}`);
-//                 let countNum = counter.textContent;
-//                 counter.textContent = Number(countNum) += 1;
-//                 const div = document.createElement('div');
-//                 div.classList.add('added-list__user-task');
-//                 const input = document.createElement('input');
-//                 input.classList.add('added-list__user-task__input');
-//                 const vector = document.createElement('div');
-//                 vector.classList.add('added-list__user-task__vector-img');
-//                 input.addEventListener('input', function () {
-//                     vector.classList.add('added-list__user-task__vector-img-active');
-//                     if (input.value === '') {
-//                         vector.classList.remove('added-list__user-task__vector-img-active');
-//                     } 
-//                     if (input.value.length === 26) {
-//                         input.value = input.value.slice(0, -1);
-//                     }
-//                 })
-//                 vector.addEventListener('click', function () {
-//                     if (vector.classList.contains('added-list__user-task__vector-img-active')) {
-//                         subTaskValue = input.value;
-//                         input.remove();
-//                         vector.remove();
-//                         check = true;
-//                         subTaskLabel(div);
-//                     }
-//                 })
-//                 div.appendChild(input);
-//                 div.appendChild(vector);
-//                 listContainerArray[i].after(div);
-//             }
-//         })
-//     }
-//     // оживление чекбоксов
-//     for (let i = 0; i < checkboxArr.length; i++) {
-//         checkboxInputArray.push(document.querySelector(`#checkbox${i}`));
-//         checkboxDiv.push(document.querySelector(`#checkboxDiv${i}`));
-//         checkboxText.push(document.querySelector(`#checkboxText${i}`));
-//     }
-//     for (let i = 0; i < checkboxInputArray.length; i++) {
-//         checkboxInputArray[i].addEventListener('click', function () {
-//             if (checkboxInputArray[i].checked) {
-//                 checkboxInputArray[i].setAttribute('checked', true);
-//                 checkboxDiv[i].classList.add('checkbox-label-active');
-//                 checkboxText[i].classList.add('added-list__checkbox-div-label-active');
-//             } else {
-//                 checkboxInputArray[i].removeAttribute('checked', true);
-//                 checkboxDiv[i].classList.remove('checkbox-label-active');
-//                 checkboxText[i].classList.remove('added-list__checkbox-div-label-active');
-//             }
-//         })
-//     }
-// })
+// объект с задачами помещается в локальное хранилище при уходе со страницы 
+window.addEventListener('unload', function(){
+    const str = JSON.stringify(toDoLists);
+    localStorage.setItem('toDo', str);
+});
